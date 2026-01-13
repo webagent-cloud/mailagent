@@ -5,11 +5,11 @@ const fastify = Fastify({
   logger: true
 });
 
-fastify.get('/', async (request, reply) => {
+fastify.get('/api', async (request, reply) => {
   return { message: greet('World') };
 });
 
-fastify.get('/health', async (request, reply) => {
+fastify.get('/api/health', async (request, reply) => {
   return { status: 'ok' };
 });
 
