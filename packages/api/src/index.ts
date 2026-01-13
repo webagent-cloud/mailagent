@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import { greet } from '@webagent/core';
+import { emailAccountsRoutes } from './routes/email-accounts.js';
 
 const fastify = Fastify({
   logger: true
@@ -12,6 +13,9 @@ fastify.get('/', async (request, reply) => {
 fastify.get('/health', async (request, reply) => {
   return { status: 'ok' };
 });
+
+// Register email account routes
+fastify.register(emailAccountsRoutes);
 
 const start = async () => {
   try {

@@ -1,2 +1,11 @@
 node_modules
 dist
+
+/src/generated/prisma
+
+# Database files
+*.db
+*.db-journal
+
+# Environment variables
+.env

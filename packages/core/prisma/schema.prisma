@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Enum for email provider types
+enum EmailProvider {
+  GMAIL
+  OUTLOOK
+}
+
+// Email account configuration table
+// This stores the credentials and configuration for connecting to email providers
+model EmailAccount {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Account identification
+  emailAddress String        @unique
+  displayName  String?
+  provider     EmailProvider
+
+  // OAuth2 credentials for API access
+  accessToken      String // Encrypted access token
+  refreshToken     String // Encrypted refresh token
+  tokenExpiry      DateTime?
+
+  // Provider-specific configuration
+  clientId         String?
+  clientSecret     String? // Encrypted
+  tenantId         String? // For Outlook/Microsoft accounts
+
+  // Sync settings
+  isActive         Boolean  @default(true)
+  lastSyncAt       DateTime?
+  syncInterval     Int      @default(300) // Sync interval in seconds (default: 5 minutes)
+
+  // Additional metadata
+  metadata         String?  // JSON string for additional provider-specific data
+
+  // Relations
+  emails           Email[]
+
+  @@index([emailAddress])
+  @@index([provider])
+  @@index([isActive])
+}
+
+// Email messages fetched from accounts
+model Email {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Email account relationship
+  accountId String
+  account   EmailAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Email identifiers
+  messageId     String  @unique // Provider's message ID
+  threadId      String?
+
+  // Email content
+  subject       String
+  from          String
+  to            String  // JSON array of recipients
+  cc            String? // JSON array of recipients
+  bcc           String? // JSON array of recipients
+  body          String  @default("") // Email body (HTML or plain text)
+  bodyPreview   String? // Short preview of the body
+
+  // Email metadata
+  receivedAt    DateTime
+  isRead        Boolean  @default(false)
+  isStarred     Boolean  @default(false)
+  hasAttachments Boolean @default(false)
+  labels        String?  // JSON array of labels/categories
+
+  // Additional metadata
+  metadata      String?  // JSON string for additional provider-specific data
+
+  // Relations
+  attachments   EmailAttachment[]
+
+  @@index([accountId])
+  @@index([messageId])
+  @@index([receivedAt])
+  @@index([isRead])
+}
+
+// Email attachments
+model EmailAttachment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Email relationship
+  emailId   String
+  email     Email  @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  // Attachment details
+  filename     String
+  mimeType     String
+  size         Int     // Size in bytes
+  contentId    String? // For inline attachments
+
+  // Storage
+  storagePath  String? // Path to stored file (if downloaded)
+  attachmentId String  // Provider's attachment ID
+
+  // Additional metadata
+  metadata     String? // JSON string for additional provider-specific data
+
+  @@index([emailId])
+}
