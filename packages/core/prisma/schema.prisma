@@ -16,6 +16,19 @@ enum EmailProvider {
   OUTLOOK
 }
 
+// Enum for agent trigger types
+enum AgentTriggerType {
+  ON_EACH_EMAIL
+  TRIGGER_MANUALLY
+}
+
+// Enum for agent response format types
+enum AgentResponseFormat {
+  STRING
+  JSON
+  JSON_SCHEMA
+}
+
 // Email account configuration table
 // This stores the credentials and configuration for connecting to email providers
 model EmailAccount {
@@ -119,4 +132,38 @@ model EmailAttachment {
   metadata     String? // JSON string for additional provider-specific data
 
   @@index([emailId])
+}
+
+// Agent configuration for automated email processing
+model Agent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Agent identification
+  name      String
+  trigger   String
+  triggerType AgentTriggerType @default(TRIGGER_MANUALLY)
+
+  // Agent configuration
+  prompt           String
+  responseFormat   AgentResponseFormat @default(STRING)
+  jsonSchema       String? // JSON string for schema when responseFormat is JSON_SCHEMA
+
+  // Webhook configuration
+  webhookUrl       String?
+
+  // File extraction configuration
+  shouldExtractFiles Boolean @default(false)
+  extractFileConfig  String? // JSON string for file extraction configuration
+
+  // Model configuration
+  model            String  @default("gpt-4")
+  modelProvider    String  @default("openai")
+
+  // Status
+  isActive         Boolean @default(true)
+
+  @@index([triggerType])
+  @@index([isActive])
 }

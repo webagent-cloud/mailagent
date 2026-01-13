@@ -4,6 +4,7 @@ import { greet } from '@webagent/core';
 import { emailAccountsRoutes } from './routes/email-accounts.js';
 import authRoutes from './routes/auth.js';
 import { statsRoutes } from './routes/stats.js';
+import { agentsRoutes } from './routes/agents.js';
 import { GmailSyncService } from './services/gmail-sync.js';
 
 const fastify = Fastify({
@@ -26,6 +27,9 @@ fastify.register(emailAccountsRoutes);
 
 // Register stats routes
 fastify.register(statsRoutes);
+
+// Register agent routes
+fastify.register(agentsRoutes);
 
 // Initialize email sync service
 const gmailSync = new GmailSyncService();
