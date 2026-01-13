@@ -18,8 +18,11 @@ import {
 
 interface EmailAccount {
   id: string;
-  email: string;
+  emailAddress: string;
+  displayName: string;
   provider: string;
+  isActive: boolean;
+  lastSyncAt: string | null;
 }
 
 interface Email {
@@ -122,7 +125,7 @@ export default function Inbox() {
                 ) : (
                   emailAccounts.map((account) => (
                     <option key={account.id} value={account.id}>
-                      {account.email}
+                      {account.displayName} - {account.emailAddress}
                     </option>
                   ))
                 )}
