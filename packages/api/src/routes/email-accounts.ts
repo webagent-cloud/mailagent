@@ -1,7 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@webagent/core/db';
+import { GmailSyncService } from '../services/gmail-sync.js';
 
 export async function emailAccountsRoutes(fastify: FastifyInstance) {
+  const gmailSync = new GmailSyncService();
   // Get all email accounts
   fastify.get('/email-accounts', async (request, reply) => {
     try {
@@ -17,7 +19,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
           // Exclude sensitive fields like tokens
         }
       });
-      return { accounts };
+      return accounts;
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({ error: 'Failed to fetch email accounts' });
@@ -29,7 +31,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string };
       const account = await prisma.emailAccount.findUnique({
-        where: { id },
+        where: { id: Number(id) },
         select: {
           id: true,
           emailAddress: true,
@@ -67,7 +69,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
 
       const emails = await prisma.email.findMany({
         where: {
-          accountId: id,
+          emailAccountId: Number(id),
           ...(unread !== undefined && { isRead: !unread })
         },
         orderBy: {
@@ -99,10 +101,10 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string };
       const email = await prisma.email.findUnique({
-        where: { id },
+        where: { id: Number(id) },
         include: {
           attachments: true,
-          account: {
+          emailAccount: {
             select: {
               emailAddress: true,
               displayName: true,
@@ -131,7 +133,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
       const { isRead } = request.body as { isRead: boolean };
 
       const email = await prisma.email.update({
-        where: { id },
+        where: { id: Number(id) },
         data: { isRead }
       });
 
@@ -139,6 +141,32 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({ error: 'Failed to update email' });
+    }
+  });
+
+  // Manually trigger sync for a specific account
+  fastify.post('/email-accounts/:id/sync', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+
+      const account = await prisma.emailAccount.findUnique({
+        where: { id: Number(id) }
+      });
+
+      if (!account) {
+        reply.status(404).send({ error: 'Email account not found' });
+        return;
+      }
+
+      // Trigger sync in background
+      gmailSync.syncAccount(Number(id)).catch(err => {
+        fastify.log.error('Sync error:', err);
+      });
+
+      return { message: 'Sync started', accountId: id };
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(500).send({ error: 'Failed to start sync' });
     }
   });
 }

@@ -15,7 +15,9 @@
   "license": "ISC",
   "dependencies": {
     "@webagent/core": "workspace:*",
-    "fastify": "^4.25.2"
+    "dotenv": "^17.2.3",
+    "fastify": "^4.25.2",
+    "googleapis": "^170.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
