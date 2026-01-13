@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Mail, Bot } from 'lucide-react';
+import { Home, Mail, Bot, Inbox } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface LayoutProps {
@@ -8,6 +8,7 @@ interface LayoutProps {
 
 const menuItems = [
   { path: '/', label: 'Home', icon: Home },
+  { path: '/inbox', label: 'Inbox', icon: Inbox },
   { path: '/email-account', label: 'Email account', icon: Mail },
   { path: '/agents', label: 'Agents', icon: Bot },
 ];
