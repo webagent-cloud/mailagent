@@ -67,29 +67,40 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
         unread?: boolean;
       };
 
-      const emails = await prisma.email.findMany({
-        where: {
-          accountId: id,
-          ...(unread !== undefined && { isRead: !unread })
-        },
-        orderBy: {
-          receivedAt: 'desc'
-        },
-        take: Number(limit),
-        skip: Number(offset),
-        include: {
-          attachments: {
-            select: {
-              id: true,
-              filename: true,
-              mimeType: true,
-              size: true,
+      const where = {
+        accountId: id,
+        ...(unread !== undefined && { isRead: !unread })
+      };
+
+      // Get total count and emails in parallel
+      const [total, emails] = await Promise.all([
+        prisma.email.count({ where }),
+        prisma.email.findMany({
+          where,
+          orderBy: {
+            receivedAt: 'desc'
+          },
+          take: Number(limit),
+          skip: Number(offset),
+          include: {
+            attachments: {
+              select: {
+                id: true,
+                filename: true,
+                mimeType: true,
+                size: true,
+              }
             }
           }
-        }
-      });
+        })
+      ]);
 
-      return { emails, count: emails.length };
+      return {
+        emails,
+        total,
+        limit: Number(limit),
+        offset: Number(offset)
+      };
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({ error: 'Failed to fetch emails' });
