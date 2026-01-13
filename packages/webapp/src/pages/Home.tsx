@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { greet } from '@webagent/core';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 export function Home() {
@@ -7,7 +6,7 @@ export function Home() {
   const [apiMessage, setApiMessage] = useState<string>('');
 
   useEffect(() => {
-    setMessage(greet('React'));
+    setMessage('Hello, React!');
 
     fetch('/api/')
       .then(res => res.json())
@@ -25,8 +24,8 @@ export function Home() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Core Package</CardTitle>
-            <CardDescription>Status from the core package</CardDescription>
+            <CardTitle>Web Application</CardTitle>
+            <CardDescription>Frontend status</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-lg">{message || 'Loading...'}</p>
