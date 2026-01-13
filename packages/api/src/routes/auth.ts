@@ -51,13 +51,17 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           where: { id: existingAccount.id },
           data: {
             accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
+            ...(tokens.refreshToken && { refreshToken: tokens.refreshToken }),
             tokenExpiry: tokens.tokenExpiry,
             isActive: true,
           },
         });
       } else {
         // Create new email account
+        if (!tokens.refreshToken) {
+          throw new Error('Refresh token is required for new accounts');
+        }
+
         await prisma.emailAccount.create({
           data: {
             emailAddress: userInfo.email,

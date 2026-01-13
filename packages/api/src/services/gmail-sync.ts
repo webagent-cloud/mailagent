@@ -9,7 +9,7 @@ export class GmailSyncService {
     this.gmailOAuth = new GmailOAuthService();
   }
 
-  async syncAccount(accountId: number) {
+  async syncAccount(accountId: string) {
     const account = await prisma.emailAccount.findUnique({
       where: { id: accountId },
     });
@@ -66,7 +66,7 @@ export class GmailSyncService {
         const existingEmail = await prisma.email.findFirst({
           where: {
             messageId: message.id,
-            emailAccountId: accountId,
+            accountId: accountId,
           },
         });
 
@@ -91,12 +91,12 @@ export class GmailSyncService {
           const date = getHeader('date');
 
           // Extract body
-          let body = '';
+          let bodyText = '';
           let htmlBody = '';
 
           const extractBody = (part: any): void => {
             if (part.mimeType === 'text/plain' && part.body?.data) {
-              body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+              bodyText = Buffer.from(part.body.data, 'base64').toString('utf-8');
             } else if (part.mimeType === 'text/html' && part.body?.data) {
               htmlBody = Buffer.from(part.body.data, 'base64').toString('utf-8');
             }
@@ -113,15 +113,14 @@ export class GmailSyncService {
           // Save email to database
           await prisma.email.create({
             data: {
-              emailAccountId: accountId,
+              accountId: accountId,
               messageId: message.id,
               threadId: message.threadId || '',
               subject,
-              fromAddress: from,
-              toAddress: to,
+              from: from,
+              to: to,
               receivedAt: date ? new Date(date) : new Date(),
-              body: body || htmlBody,
-              htmlBody: htmlBody || null,
+              body: bodyText || htmlBody,
               isRead: false,
               isStarred: false,
             },

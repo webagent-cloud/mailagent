@@ -31,7 +31,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string };
       const account = await prisma.emailAccount.findUnique({
-        where: { id: Number(id) },
+        where: { id },
         select: {
           id: true,
           emailAddress: true,
@@ -69,7 +69,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
 
       const emails = await prisma.email.findMany({
         where: {
-          emailAccountId: Number(id),
+          accountId: id,
           ...(unread !== undefined && { isRead: !unread })
         },
         orderBy: {
@@ -101,10 +101,10 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string };
       const email = await prisma.email.findUnique({
-        where: { id: Number(id) },
+        where: { id },
         include: {
           attachments: true,
-          emailAccount: {
+          account: {
             select: {
               emailAddress: true,
               displayName: true,
@@ -133,7 +133,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
       const { isRead } = request.body as { isRead: boolean };
 
       const email = await prisma.email.update({
-        where: { id: Number(id) },
+        where: { id },
         data: { isRead }
       });
 
@@ -150,7 +150,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
       const { id } = request.params as { id: string };
 
       const account = await prisma.emailAccount.findUnique({
-        where: { id: Number(id) }
+        where: { id }
       });
 
       if (!account) {
@@ -159,7 +159,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
       }
 
       // Trigger sync in background
-      gmailSync.syncAccount(Number(id)).catch(err => {
+      gmailSync.syncAccount(id).catch(err => {
         fastify.log.error('Sync error:', err);
       });
 
