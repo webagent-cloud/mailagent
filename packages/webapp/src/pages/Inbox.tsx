@@ -70,7 +70,7 @@ export default function Inbox() {
       const response = await fetch(`/api/email-accounts/${accountId}/emails`);
       if (!response.ok) throw new Error('Failed to fetch emails');
       const data = await response.json();
-      setEmails(data);
+      setEmails(data.emails || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
