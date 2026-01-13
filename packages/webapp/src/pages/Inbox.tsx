@@ -103,33 +103,34 @@ export default function Inbox() {
     <div className="container mx-auto py-6">
       <Card>
         <CardHeader>
-          <CardTitle>Inbox</CardTitle>
-          <CardDescription>
-            View and manage your emails
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Inbox</CardTitle>
+              <CardDescription>
+                View and manage your emails
+              </CardDescription>
+            </div>
+            <div className="w-64">
+              <Select
+                id="account-select"
+                value={selectedAccount}
+                onChange={(e) => setSelectedAccount(e.target.value)}
+                disabled={emailAccounts.length === 0}
+              >
+                {emailAccounts.length === 0 ? (
+                  <option value="">No email accounts configured</option>
+                ) : (
+                  emailAccounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.email}
+                    </option>
+                  ))
+                )}
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-6">
-            <label htmlFor="account-select" className="block text-sm font-medium mb-2">
-              Email Account
-            </label>
-            <Select
-              id="account-select"
-              value={selectedAccount}
-              onChange={(e) => setSelectedAccount(e.target.value)}
-              disabled={emailAccounts.length === 0}
-            >
-              {emailAccounts.length === 0 ? (
-                <option value="">No email accounts configured</option>
-              ) : (
-                emailAccounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.email} ({account.provider})
-                  </option>
-                ))
-              )}
-            </Select>
-          </div>
 
           {error && (
             <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-md">
