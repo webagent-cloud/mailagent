@@ -277,90 +277,8 @@ export function Agents() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="trigger">Trigger *</Label>
-                  <Select
-                    id="trigger"
-                    value={formData.trigger}
-                    onChange={(e) => setFormData({ ...formData, trigger: e.target.value as 'ON_EACH_EMAIL' | 'WEBHOOK' })}
-                  >
-                    <option value="ON_EACH_EMAIL">On each mail</option>
-                    <option value="WEBHOOK">Webhook</option>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="responseFormat">Response Format *</Label>
-                  <Select
-                    id="responseFormat"
-                    value={formData.responseFormat}
-                    onChange={(e) => setFormData({ ...formData, responseFormat: e.target.value as 'STRING' | 'JSON' | 'JSON_SCHEMA' })}
-                  >
-                    <option value="STRING">String</option>
-                    <option value="JSON">JSON</option>
-                    <option value="JSON_SCHEMA">JSON Schema</option>
-                  </Select>
-                </div>
-              </div>
-
-              {formData.responseFormat === 'JSON_SCHEMA' && (
-                <div className="space-y-2">
-                  <Label htmlFor="jsonSchema">JSON Schema</Label>
-                  <Textarea
-                    id="jsonSchema"
-                    value={formData.jsonSchema}
-                    onChange={(e) => setFormData({ ...formData, jsonSchema: e.target.value })}
-                    placeholder='{"type": "object", "properties": {...}}'
-                    rows={4}
-                  />
-                </div>
-              )}
-
               <div className="space-y-2">
-                <Label htmlFor="prompt">Prompt *</Label>
-                <Textarea
-                  id="prompt"
-                  value={formData.prompt}
-                  onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                  placeholder="Enter the prompt for your agent..."
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="webhookUrl">Webhook URL</Label>
-                <Input
-                  id="webhookUrl"
-                  type="url"
-                  value={formData.webhookUrl}
-                  onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
-                  placeholder="https://your-webhook-endpoint.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="model">Model *</Label>
-                <Select
-                  id="model"
-                  value={`${formData.modelProvider}/${formData.model}`}
-                  onChange={(e) => {
-                    const [provider, model] = e.target.value.split('/');
-                    setFormData({ ...formData, modelProvider: provider, model });
-                  }}
-                >
-                  <option value="openai/gpt-4">OpenAI - GPT-4</option>
-                  <option value="openai/gpt-4-turbo">OpenAI - GPT-4 Turbo</option>
-                  <option value="openai/gpt-3.5-turbo">OpenAI - GPT-3.5 Turbo</option>
-                  <option value="anthropic/claude-3-opus">Anthropic - Claude 3 Opus</option>
-                  <option value="anthropic/claude-3-sonnet">Anthropic - Claude 3 Sonnet</option>
-                  <option value="anthropic/claude-3-haiku">Anthropic - Claude 3 Haiku</option>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Email Accounts</Label>
+                <Label>Email Accounts *</Label>
                 <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
                   {emailAccounts.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No email accounts available. Please connect an email account first.</p>
@@ -393,7 +311,87 @@ export function Agents() {
                     ))
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">Select which email accounts this agent should monitor</p>
+                <p className="text-xs text-muted-foreground">Select at least one email account this agent should monitor</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="trigger">Trigger *</Label>
+                <Select
+                  id="trigger"
+                  value={formData.trigger}
+                  onChange={(e) => setFormData({ ...formData, trigger: e.target.value as 'ON_EACH_EMAIL' | 'WEBHOOK' })}
+                >
+                  <option value="ON_EACH_EMAIL">On each mail</option>
+                  <option value="WEBHOOK">Webhook</option>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="prompt">Prompt *</Label>
+                <Textarea
+                  id="prompt"
+                  value={formData.prompt}
+                  onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                  placeholder="Enter the prompt for your agent..."
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="model">Model *</Label>
+                <Select
+                  id="model"
+                  value={`${formData.modelProvider}/${formData.model}`}
+                  onChange={(e) => {
+                    const [provider, model] = e.target.value.split('/');
+                    setFormData({ ...formData, modelProvider: provider, model });
+                  }}
+                >
+                  <option value="openai/gpt-4">OpenAI - GPT-4</option>
+                  <option value="openai/gpt-4-turbo">OpenAI - GPT-4 Turbo</option>
+                  <option value="openai/gpt-3.5-turbo">OpenAI - GPT-3.5 Turbo</option>
+                  <option value="anthropic/claude-3-opus">Anthropic - Claude 3 Opus</option>
+                  <option value="anthropic/claude-3-sonnet">Anthropic - Claude 3 Sonnet</option>
+                  <option value="anthropic/claude-3-haiku">Anthropic - Claude 3 Haiku</option>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="responseFormat">Response Format *</Label>
+                <Select
+                  id="responseFormat"
+                  value={formData.responseFormat}
+                  onChange={(e) => setFormData({ ...formData, responseFormat: e.target.value as 'STRING' | 'JSON' | 'JSON_SCHEMA' })}
+                >
+                  <option value="STRING">String</option>
+                  <option value="JSON">JSON</option>
+                  <option value="JSON_SCHEMA">JSON Schema</option>
+                </Select>
+              </div>
+
+              {formData.responseFormat === 'JSON_SCHEMA' && (
+                <div className="space-y-2">
+                  <Label htmlFor="jsonSchema">JSON Schema</Label>
+                  <Textarea
+                    id="jsonSchema"
+                    value={formData.jsonSchema}
+                    onChange={(e) => setFormData({ ...formData, jsonSchema: e.target.value })}
+                    placeholder='{"type": "object", "properties": {...}}'
+                    rows={4}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="webhookUrl">Webhook URL</Label>
+                <Input
+                  id="webhookUrl"
+                  type="url"
+                  value={formData.webhookUrl}
+                  onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
+                  placeholder="https://your-webhook-endpoint.com"
+                />
               </div>
 
               <div className="space-y-4">
