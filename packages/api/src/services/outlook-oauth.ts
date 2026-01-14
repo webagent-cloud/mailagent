@@ -60,11 +60,15 @@ export class OutlookOAuthService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = (await response.json()) as { error_description?: string; error?: string };
       throw new Error(`Token exchange failed: ${errorData.error_description || errorData.error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      access_token: string;
+      refresh_token?: string;
+      expires_in?: number;
+    };
 
     return {
       accessToken: data.access_token,
@@ -84,7 +88,11 @@ export class OutlookOAuthService {
       throw new Error('Failed to fetch user info');
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      mail?: string;
+      userPrincipalName?: string;
+      displayName?: string;
+    };
 
     return {
       email: data.mail || data.userPrincipalName || '',
@@ -112,11 +120,15 @@ export class OutlookOAuthService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = (await response.json()) as { error_description?: string; error?: string };
       throw new Error(`Token refresh failed: ${errorData.error_description || errorData.error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      access_token: string;
+      refresh_token?: string;
+      expires_in?: number;
+    };
 
     return {
       accessToken: data.access_token,

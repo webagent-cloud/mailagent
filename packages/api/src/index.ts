@@ -5,7 +5,7 @@ import { emailAccountsRoutes } from './routes/email-accounts.js';
 import authRoutes from './routes/auth.js';
 import { statsRoutes } from './routes/stats.js';
 import { agentsRoutes } from './routes/agents.js';
-import { GmailSyncService } from './services/gmail-sync.js';
+import { EmailSyncService } from './services/email-sync.js';
 
 const fastify = Fastify({
   logger: true
@@ -32,7 +32,7 @@ fastify.register(statsRoutes);
 fastify.register(agentsRoutes);
 
 // Initialize email sync service
-const gmailSync = new GmailSyncService();
+const emailSync = new EmailSyncService();
 
 // Start email polling (every 1 minute)
 const SYNC_INTERVAL = 60 * 1000; // 1 minute in milliseconds
@@ -42,12 +42,12 @@ const startEmailPolling = () => {
 
   // Run initial sync after 5 seconds
   setTimeout(() => {
-    gmailSync.syncAllActiveAccounts().catch(console.error);
+    emailSync.syncAllActiveAccounts().catch(console.error);
   }, 5000);
 
   // Then run every minute
   setInterval(() => {
-    gmailSync.syncAllActiveAccounts().catch(console.error);
+    emailSync.syncAllActiveAccounts().catch(console.error);
   }, SYNC_INTERVAL);
 };
 

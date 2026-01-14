@@ -1,9 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@webagent/core/db';
-import { GmailSyncService } from '../services/gmail-sync.js';
+import { EmailSyncService } from '../services/email-sync.js';
 
 export async function emailAccountsRoutes(fastify: FastifyInstance) {
-  const gmailSync = new GmailSyncService();
+  const emailSync = new EmailSyncService();
   // Get all email accounts
   fastify.get('/email-accounts', async (request, reply) => {
     try {
@@ -170,7 +170,7 @@ export async function emailAccountsRoutes(fastify: FastifyInstance) {
       }
 
       // Trigger sync in background
-      gmailSync.syncAccount(id).catch(err => {
+      emailSync.syncAccount(id).catch(err => {
         fastify.log.error('Sync error:', err);
       });
 
