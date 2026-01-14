@@ -5,7 +5,13 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
-import { Select } from '../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { Plus, Edit2, Trash2, Power, CheckCircle, XCircle, X } from 'lucide-react';
 
 interface EmailAccount {
@@ -317,12 +323,16 @@ export function Agents() {
               <div className="space-y-2">
                 <Label htmlFor="trigger">Trigger *</Label>
                 <Select
-                  id="trigger"
                   value={formData.trigger}
-                  onChange={(e) => setFormData({ ...formData, trigger: e.target.value as 'ON_EACH_EMAIL' | 'WEBHOOK' })}
+                  onValueChange={(value) => setFormData({ ...formData, trigger: value as 'ON_EACH_EMAIL' | 'WEBHOOK' })}
                 >
-                  <option value="ON_EACH_EMAIL">On each mail</option>
-                  <option value="WEBHOOK">Webhook</option>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select trigger type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ON_EACH_EMAIL">On each mail</SelectItem>
+                    <SelectItem value="WEBHOOK">Webhook</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
 
@@ -341,35 +351,43 @@ export function Agents() {
               <div className="space-y-2">
                 <Label htmlFor="model">Model *</Label>
                 <Select
-                  id="model"
                   value={`${formData.modelProvider}/${formData.model}`}
-                  onChange={(e) => {
-                    const [provider, model] = e.target.value.split('/');
+                  onValueChange={(value) => {
+                    const [provider, model] = value.split('/');
                     setFormData({ ...formData, modelProvider: provider, model });
                   }}
                 >
-                  <option value="openai/gpt-4">OpenAI - GPT-4</option>
-                  <option value="openai/gpt-4-turbo">OpenAI - GPT-4 Turbo</option>
-                  <option value="openai/gpt-3.5-turbo">OpenAI - GPT-3.5 Turbo</option>
-                  <option value="anthropic/claude-3-opus">Anthropic - Claude 3 Opus</option>
-                  <option value="anthropic/claude-3-sonnet">Anthropic - Claude 3 Sonnet</option>
-                  <option value="anthropic/claude-3-haiku">Anthropic - Claude 3 Haiku</option>
-                  <option value="google/gemini-2.0-flash-exp">Google - Gemini 2.0 Flash (Experimental)</option>
-                  <option value="google/gemini-1.5-pro">Google - Gemini 1.5 Pro</option>
-                  <option value="google/gemini-1.5-flash">Google - Gemini 1.5 Flash</option>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai/gpt-4">OpenAI - GPT-4</SelectItem>
+                    <SelectItem value="openai/gpt-4-turbo">OpenAI - GPT-4 Turbo</SelectItem>
+                    <SelectItem value="openai/gpt-3.5-turbo">OpenAI - GPT-3.5 Turbo</SelectItem>
+                    <SelectItem value="anthropic/claude-3-opus">Anthropic - Claude 3 Opus</SelectItem>
+                    <SelectItem value="anthropic/claude-3-sonnet">Anthropic - Claude 3 Sonnet</SelectItem>
+                    <SelectItem value="anthropic/claude-3-haiku">Anthropic - Claude 3 Haiku</SelectItem>
+                    <SelectItem value="google/gemini-2.0-flash-exp">Google - Gemini 2.0 Flash (Experimental)</SelectItem>
+                    <SelectItem value="google/gemini-1.5-pro">Google - Gemini 1.5 Pro</SelectItem>
+                    <SelectItem value="google/gemini-1.5-flash">Google - Gemini 1.5 Flash</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="responseFormat">Response Format *</Label>
                 <Select
-                  id="responseFormat"
                   value={formData.responseFormat}
-                  onChange={(e) => setFormData({ ...formData, responseFormat: e.target.value as 'STRING' | 'JSON' | 'JSON_SCHEMA' })}
+                  onValueChange={(value) => setFormData({ ...formData, responseFormat: value as 'STRING' | 'JSON' | 'JSON_SCHEMA' })}
                 >
-                  <option value="STRING">String</option>
-                  <option value="JSON">JSON</option>
-                  <option value="JSON_SCHEMA">JSON Schema</option>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select response format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STRING">String</SelectItem>
+                    <SelectItem value="JSON">JSON</SelectItem>
+                    <SelectItem value="JSON_SCHEMA">JSON Schema</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
 

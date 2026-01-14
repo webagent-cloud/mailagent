@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Select } from '../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import {
   Table,
   TableBody,
@@ -115,20 +121,26 @@ export default function Inbox() {
             </div>
             <div className="w-64">
               <Select
-                id="account-select"
                 value={selectedAccount}
-                onChange={(e) => setSelectedAccount(e.target.value)}
+                onValueChange={setSelectedAccount}
                 disabled={emailAccounts.length === 0}
               >
-                {emailAccounts.length === 0 ? (
-                  <option value="">No email accounts configured</option>
-                ) : (
-                  emailAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.displayName} - {account.emailAddress}
-                    </option>
-                  ))
-                )}
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an email account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {emailAccounts.length === 0 ? (
+                    <SelectItem value="none" disabled>
+                      No email accounts configured
+                    </SelectItem>
+                  ) : (
+                    emailAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.emailAddress}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
               </Select>
             </div>
           </div>
