@@ -62,6 +62,19 @@ export function EmailAccount() {
     }
   };
 
+  const handleConnectOutlook = async () => {
+    try {
+      const response = await fetch('/api/auth/outlook');
+      const data = await response.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error('Failed to initiate Outlook OAuth:', error);
+      setMessage({ type: 'error', text: 'Failed to connect Outlook account' });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -141,6 +154,13 @@ export function EmailAccount() {
             >
               <Mail className="h-4 w-4" />
               Connect Gmail Account
+            </button>
+            <button
+              onClick={handleConnectOutlook}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <Mail className="h-4 w-4" />
+              Connect Outlook Account
             </button>
           </div>
         </CardContent>
