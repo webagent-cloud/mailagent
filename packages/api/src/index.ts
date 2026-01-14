@@ -5,6 +5,7 @@ import { emailAccountsRoutes } from './routes/email-accounts.js';
 import authRoutes from './routes/auth.js';
 import { statsRoutes } from './routes/stats.js';
 import { agentsRoutes } from './routes/agents.js';
+import { agentRunsRoutes } from './routes/agent-runs.js';
 import { EmailSyncService } from './services/email-sync.js';
 
 const fastify = Fastify({
@@ -30,6 +31,9 @@ fastify.register(statsRoutes);
 
 // Register agent routes
 fastify.register(agentsRoutes);
+
+// Register agent runs routes
+fastify.register(agentRunsRoutes);
 
 // Initialize email sync service
 const emailSync = new EmailSyncService();

@@ -1,12 +1,15 @@
 import { google } from 'googleapis';
 import { prisma } from '@webagent/core/db';
 import { GmailOAuthService } from './gmail-oauth';
+import { AgentRunnerService } from './agent-runner';
 
 export class GmailSyncService {
   private gmailOAuth: GmailOAuthService;
+  private agentRunner: AgentRunnerService;
 
   constructor() {
     this.gmailOAuth = new GmailOAuthService();
+    this.agentRunner = new AgentRunnerService();
   }
 
   async syncAccount(accountId: string) {
@@ -111,7 +114,7 @@ export class GmailSyncService {
           }
 
           // Save email to database
-          await prisma.email.create({
+          const newEmail = await prisma.email.create({
             data: {
               accountId: accountId,
               messageId: message.id,
@@ -127,6 +130,9 @@ export class GmailSyncService {
           });
 
           console.log(`Synced email: ${subject}`);
+
+          // Trigger agents for this new email
+          await this.agentRunner.triggerAgentsForEmail(newEmail);
         } catch (error) {
           console.error(`Error syncing message ${message.id}:`, error);
         }

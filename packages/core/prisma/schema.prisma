@@ -104,6 +104,7 @@ model Email {
 
   // Relations
   attachments   EmailAttachment[]
+  agentRuns     AgentRun[]
 
   @@index([accountId])
   @@index([messageId])
@@ -168,6 +169,7 @@ model Agent {
 
   // Relations
   emailAccounts    AgentEmailAccount[]
+  runs             AgentRun[]
 
   @@index([triggerType])
   @@index([isActive])
@@ -189,4 +191,51 @@ model AgentEmailAccount {
   @@unique([agentId, emailAccountId])
   @@index([agentId])
   @@index([emailAccountId])
+}
+
+// Enum for agent run status
+enum AgentRunStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+// Agent run records - stores execution history and results
+// Copies agent configuration at run time to preserve settings
+model AgentRun {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Reference to the original agent (optional, agent may be deleted)
+  agentId   String?
+  agent     Agent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  // Reference to the email that triggered this run
+  emailId   String
+  email     Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  // Snapshot of agent configuration at run time
+  name             String
+  trigger          String
+  triggerType      AgentTriggerType
+  prompt           String
+  responseFormat   AgentResponseFormat
+  jsonSchema       String?
+  webhookUrl       String?
+  shouldExtractFiles Boolean
+  extractFileConfig  String?
+  model            String
+  modelProvider    String
+
+  // Run results
+  status           AgentRunStatus @default(PENDING)
+  results          String?        // AI response text
+  error            String?        // Error message if failed
+
+  @@index([agentId])
+  @@index([emailId])
+  @@index([status])
+  @@index([createdAt])
 }

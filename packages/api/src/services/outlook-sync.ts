@@ -1,5 +1,6 @@
 import { prisma } from '@webagent/core/db';
 import { OutlookOAuthService } from './outlook-oauth';
+import { AgentRunnerService } from './agent-runner';
 
 interface OutlookEmailAddress {
   name?: string;
@@ -19,9 +20,11 @@ interface OutlookMessage {
 
 export class OutlookSyncService {
   private outlookOAuth: OutlookOAuthService;
+  private agentRunner: AgentRunnerService;
 
   constructor() {
     this.outlookOAuth = new OutlookOAuthService();
+    this.agentRunner = new AgentRunnerService();
   }
 
   private async refreshToken(accountId: string, refreshToken: string) {
@@ -166,7 +169,7 @@ export class OutlookSyncService {
           const body = message.body?.content || '';
 
           // Save email to database
-          await prisma.email.create({
+          const newEmail = await prisma.email.create({
             data: {
               accountId: accountId,
               messageId: message.id,
@@ -182,6 +185,9 @@ export class OutlookSyncService {
           });
 
           console.log(`Synced Outlook email: ${message.subject}`);
+
+          // Trigger agents for this new email
+          await this.agentRunner.triggerAgentsForEmail(newEmail);
         } catch (error) {
           console.error(`Error syncing Outlook message ${message.id}:`, error);
         }
