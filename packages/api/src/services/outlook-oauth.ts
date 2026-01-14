@@ -1,8 +1,9 @@
-import { ConfidentialClientApplication, Configuration } from '@azure/msal-node';
-
 export class OutlookOAuthService {
-  private msalConfig: Configuration;
-  private pca: ConfidentialClientApplication;
+  private clientId: string;
+  private clientSecret: string;
+  private tenantId: string;
+  private redirectUri: string;
+  private scopes: string[];
 
   constructor() {
     const clientId = process.env.OUTLOOK_CLIENT_ID;
@@ -14,59 +15,61 @@ export class OutlookOAuthService {
       throw new Error('Outlook OAuth credentials not configured in environment variables');
     }
 
-    this.msalConfig = {
-      auth: {
-        clientId,
-        authority: `https://login.microsoftonline.com/${tenantId}`,
-        clientSecret,
-      },
-    };
-
-    this.pca = new ConfidentialClientApplication(this.msalConfig);
-  }
-
-  getAuthUrl(): string {
-    const scopes = [
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.tenantId = tenantId;
+    this.redirectUri = redirectUri;
+    this.scopes = [
       'https://graph.microsoft.com/Mail.Read',
       'https://graph.microsoft.com/User.Read',
       'offline_access',
     ];
+  }
 
-    const redirectUri = process.env.OUTLOOK_REDIRECT_URI!;
+  async getAuthUrl(): Promise<string> {
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      response_type: 'code',
+      redirect_uri: this.redirectUri,
+      response_mode: 'query',
+      scope: this.scopes.join(' '),
+      prompt: 'consent',
+    });
 
-    const authCodeUrlParameters = {
-      scopes,
-      redirectUri,
-      responseMode: 'query' as const,
-      prompt: 'consent' as const, // Force consent to always get refresh token
-    };
-
-    return this.pca.getAuthCodeUrl(authCodeUrlParameters).then(url => url);
+    return `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/authorize?${params.toString()}`;
   }
 
   async exchangeCodeForTokens(code: string) {
-    const redirectUri = process.env.OUTLOOK_REDIRECT_URI!;
+    const tokenUrl = `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`;
 
-    const tokenRequest = {
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
       code,
-      scopes: [
-        'https://graph.microsoft.com/Mail.Read',
-        'https://graph.microsoft.com/User.Read',
-        'offline_access',
-      ],
-      redirectUri,
-    };
+      redirect_uri: this.redirectUri,
+      grant_type: 'authorization_code',
+      scope: this.scopes.join(' '),
+    });
 
-    const response = await this.pca.acquireTokenByCode(tokenRequest);
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
 
-    if (!response || !response.accessToken) {
-      throw new Error('No access token received');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Token exchange failed: ${errorData.error_description || errorData.error}`);
     }
 
+    const data = await response.json();
+
     return {
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken || null,
-      tokenExpiry: response.expiresOn ? new Date(response.expiresOn) : null,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || null,
+      tokenExpiry: data.expires_in ? new Date(Date.now() + data.expires_in * 1000) : null,
     };
   }
 
@@ -90,24 +93,35 @@ export class OutlookOAuthService {
   }
 
   async refreshAccessToken(refreshToken: string) {
-    const tokenRequest = {
-      refreshToken,
-      scopes: [
-        'https://graph.microsoft.com/Mail.Read',
-        'https://graph.microsoft.com/User.Read',
-        'offline_access',
-      ],
-    };
+    const tokenUrl = `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`;
 
-    const response = await this.pca.acquireTokenByRefreshToken(tokenRequest);
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+      scope: this.scopes.join(' '),
+    });
 
-    if (!response || !response.accessToken) {
-      throw new Error('Failed to refresh access token');
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Token refresh failed: ${errorData.error_description || errorData.error}`);
     }
 
+    const data = await response.json();
+
     return {
-      accessToken: response.accessToken,
-      tokenExpiry: response.expiresOn ? new Date(response.expiresOn) : null,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || null,
+      tokenExpiry: data.expires_in ? new Date(Date.now() + data.expires_in * 1000) : null,
     };
   }
 }
