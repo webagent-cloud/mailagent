@@ -7,7 +7,7 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "setup": "pnpm build && cd packages/core/ && DATABASE_URL='file:./dev.db' pnpm db:migrate"
+    "setup": "pnpm build && cd packages/core/ && DATABASE_URL='file:../api/dev.db' pnpm db:migrate"
   },
   "keywords": [],
   "author": "",
