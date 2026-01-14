@@ -101,10 +101,13 @@ export async function agentsRoutes(fastify: FastifyInstance) {
       };
 
       // Validate required fields
-      if (!name || !trigger || !prompt) {
-        reply.status(400).send({ error: 'Missing required fields: name, trigger, prompt' });
+      if (!trigger || !prompt) {
+        reply.status(400).send({ error: 'Missing required fields: trigger, prompt' });
         return;
       }
+
+      // Generate default name if not provided
+      const agentName = name || `Agent ${new Date().toLocaleDateString()}`;
 
       // Validate JSON schema if response format is JSON_SCHEMA
       if (responseFormat === 'JSON_SCHEMA' && jsonSchema) {
@@ -128,7 +131,7 @@ export async function agentsRoutes(fastify: FastifyInstance) {
 
       const agent = await prisma.agent.create({
         data: {
-          name,
+          name: agentName,
           trigger,
           triggerType,
           prompt,
