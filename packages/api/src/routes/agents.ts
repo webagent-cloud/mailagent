@@ -8,6 +8,21 @@ export async function agentsRoutes(fastify: FastifyInstance) {
       const agents = await prisma.agent.findMany({
         orderBy: {
           createdAt: 'desc'
+        },
+        include: {
+          emailAccounts: {
+            include: {
+              emailAccount: {
+                select: {
+                  id: true,
+                  emailAddress: true,
+                  displayName: true,
+                  provider: true,
+                  isActive: true
+                }
+              }
+            }
+          }
         }
       });
       return { agents };
@@ -22,7 +37,22 @@ export async function agentsRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string };
       const agent = await prisma.agent.findUnique({
-        where: { id }
+        where: { id },
+        include: {
+          emailAccounts: {
+            include: {
+              emailAccount: {
+                select: {
+                  id: true,
+                  emailAddress: true,
+                  displayName: true,
+                  provider: true,
+                  isActive: true
+                }
+              }
+            }
+          }
+        }
       });
 
       if (!agent) {
@@ -52,7 +82,8 @@ export async function agentsRoutes(fastify: FastifyInstance) {
         extractFileConfig,
         model,
         modelProvider,
-        isActive
+        isActive,
+        emailAccountIds
       } = request.body as {
         name: string;
         trigger: string;
@@ -66,6 +97,7 @@ export async function agentsRoutes(fastify: FastifyInstance) {
         model?: string;
         modelProvider?: string;
         isActive?: boolean;
+        emailAccountIds?: string[];
       };
 
       // Validate required fields
@@ -107,7 +139,27 @@ export async function agentsRoutes(fastify: FastifyInstance) {
           extractFileConfig,
           model: model ?? 'gpt-4',
           modelProvider: modelProvider ?? 'openai',
-          isActive: isActive ?? true
+          isActive: isActive ?? true,
+          emailAccounts: emailAccountIds && emailAccountIds.length > 0 ? {
+            create: emailAccountIds.map(emailAccountId => ({
+              emailAccountId
+            }))
+          } : undefined
+        },
+        include: {
+          emailAccounts: {
+            include: {
+              emailAccount: {
+                select: {
+                  id: true,
+                  emailAddress: true,
+                  displayName: true,
+                  provider: true,
+                  isActive: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -134,7 +186,8 @@ export async function agentsRoutes(fastify: FastifyInstance) {
         extractFileConfig,
         model,
         modelProvider,
-        isActive
+        isActive,
+        emailAccountIds
       } = request.body as {
         name?: string;
         trigger?: string;
@@ -148,6 +201,7 @@ export async function agentsRoutes(fastify: FastifyInstance) {
         model?: string;
         modelProvider?: string;
         isActive?: boolean;
+        emailAccountIds?: string[];
       };
 
       // Check if agent exists
@@ -180,6 +234,24 @@ export async function agentsRoutes(fastify: FastifyInstance) {
         }
       }
 
+      // If emailAccountIds provided, update the associations
+      if (emailAccountIds !== undefined) {
+        // Delete existing associations
+        await prisma.agentEmailAccount.deleteMany({
+          where: { agentId: id }
+        });
+
+        // Create new associations
+        if (emailAccountIds.length > 0) {
+          await prisma.agentEmailAccount.createMany({
+            data: emailAccountIds.map(emailAccountId => ({
+              agentId: id,
+              emailAccountId
+            }))
+          });
+        }
+      }
+
       const agent = await prisma.agent.update({
         where: { id },
         data: {
@@ -195,6 +267,21 @@ export async function agentsRoutes(fastify: FastifyInstance) {
           ...(model !== undefined && { model }),
           ...(modelProvider !== undefined && { modelProvider }),
           ...(isActive !== undefined && { isActive })
+        },
+        include: {
+          emailAccounts: {
+            include: {
+              emailAccount: {
+                select: {
+                  id: true,
+                  emailAddress: true,
+                  displayName: true,
+                  provider: true,
+                  isActive: true
+                }
+              }
+            }
+          }
         }
       });
 

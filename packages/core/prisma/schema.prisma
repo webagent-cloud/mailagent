@@ -62,6 +62,7 @@ model EmailAccount {
 
   // Relations
   emails           Email[]
+  agents           AgentEmailAccount[]
 
   @@index([emailAddress])
   @@index([provider])
@@ -165,6 +166,27 @@ model Agent {
   // Status
   isActive         Boolean @default(true)
 
+  // Relations
+  emailAccounts    AgentEmailAccount[]
+
   @@index([triggerType])
   @@index([isActive])
+}
+
+// Join table for many-to-many relationship between Agents and EmailAccounts
+model AgentEmailAccount {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  agentId        String
+  agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  emailAccountId String
+  emailAccount   EmailAccount @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, emailAccountId])
+  @@index([agentId])
+  @@index([emailAccountId])
 }

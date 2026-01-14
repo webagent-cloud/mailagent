@@ -8,6 +8,14 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Select } from '../components/ui/select';
 import { Plus, Edit2, Trash2, Power, CheckCircle, XCircle, X } from 'lucide-react';
 
+interface EmailAccount {
+  id: string;
+  emailAddress: string;
+  displayName?: string;
+  provider: string;
+  isActive: boolean;
+}
+
 interface Agent {
   id: string;
   name: string;
@@ -24,6 +32,10 @@ interface Agent {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  emailAccounts?: {
+    id: string;
+    emailAccount: EmailAccount;
+  }[];
 }
 
 interface AgentFormData {
@@ -36,10 +48,12 @@ interface AgentFormData {
   extractFileConfig: string;
   model: string;
   modelProvider: string;
+  emailAccountIds: string[];
 }
 
 export function Agents() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -54,11 +68,13 @@ export function Agents() {
     shouldExtractFiles: false,
     extractFileConfig: '',
     model: 'gpt-4',
-    modelProvider: 'openai'
+    modelProvider: 'openai',
+    emailAccountIds: []
   });
 
   useEffect(() => {
     loadAgents();
+    loadEmailAccounts();
   }, []);
 
   const loadAgents = async () => {
@@ -76,6 +92,18 @@ export function Agents() {
     }
   };
 
+  const loadEmailAccounts = async () => {
+    try {
+      const response = await fetch('/api/email-accounts');
+      if (response.ok) {
+        const data = await response.json();
+        setEmailAccounts(data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load email accounts:', error);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       trigger: 'ON_EACH_EMAIL',
@@ -86,7 +114,8 @@ export function Agents() {
       shouldExtractFiles: false,
       extractFileConfig: '',
       model: 'gpt-4',
-      modelProvider: 'openai'
+      modelProvider: 'openai',
+      emailAccountIds: []
     });
     setEditingAgent(null);
     setShowForm(false);
@@ -107,7 +136,8 @@ export function Agents() {
       shouldExtractFiles: agent.shouldExtractFiles,
       extractFileConfig: agent.extractFileConfig || '',
       model: agent.model,
-      modelProvider: agent.modelProvider
+      modelProvider: agent.modelProvider,
+      emailAccountIds: agent.emailAccounts?.map(ea => ea.emailAccount.id) || []
     });
     setEditingAgent(agent);
     setShowForm(true);
@@ -329,6 +359,43 @@ export function Agents() {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label>Email Accounts</Label>
+                <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                  {emailAccounts.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No email accounts available. Please connect an email account first.</p>
+                  ) : (
+                    emailAccounts.map((account) => (
+                      <div key={account.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`email-${account.id}`}
+                          checked={formData.emailAccountIds.includes(account.id)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setFormData({
+                              ...formData,
+                              emailAccountIds: checked
+                                ? [...formData.emailAccountIds, account.id]
+                                : formData.emailAccountIds.filter(id => id !== account.id)
+                            });
+                          }}
+                        />
+                        <Label htmlFor={`email-${account.id}`} className="font-normal cursor-pointer flex-1">
+                          <div className="flex items-center justify-between">
+                            <span>{account.emailAddress}</span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {account.provider}
+                              {!account.isActive && ' (inactive)'}
+                            </span>
+                          </div>
+                        </Label>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Select which email accounts this agent should monitor</p>
+              </div>
+
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -439,6 +506,21 @@ export function Agents() {
                       <div>
                         <span className="font-medium">Extract Files:</span> {agent.shouldExtractFiles ? 'Yes' : 'No'}
                       </div>
+                      {agent.emailAccounts && agent.emailAccounts.length > 0 && (
+                        <div>
+                          <span className="font-medium">Email Accounts:</span>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {agent.emailAccounts.map((ea) => (
+                              <span
+                                key={ea.id}
+                                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200"
+                              >
+                                {ea.emailAccount.emailAddress}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <div className="pt-2 border-t">
                         <span className="font-medium">Prompt:</span>
                         <p className="mt-1 text-muted-foreground whitespace-pre-wrap">{agent.prompt}</p>
