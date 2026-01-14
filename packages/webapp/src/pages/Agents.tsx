@@ -354,6 +354,9 @@ export function Agents() {
                   <option value="anthropic/claude-3-opus">Anthropic - Claude 3 Opus</option>
                   <option value="anthropic/claude-3-sonnet">Anthropic - Claude 3 Sonnet</option>
                   <option value="anthropic/claude-3-haiku">Anthropic - Claude 3 Haiku</option>
+                  <option value="google/gemini-2.0-flash-exp">Google - Gemini 2.0 Flash (Experimental)</option>
+                  <option value="google/gemini-1.5-pro">Google - Gemini 1.5 Pro</option>
+                  <option value="google/gemini-1.5-flash">Google - Gemini 1.5 Flash</option>
                 </Select>
               </div>
 
