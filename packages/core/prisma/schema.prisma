@@ -55,6 +55,7 @@ model EmailAccount {
   isActive         Boolean  @default(true)
   lastSyncAt       DateTime?
   syncInterval     Int      @default(300) // Sync interval in seconds (default: 5 minutes)
+  authError        String?  // Set when authentication fails; user needs to re-authenticate
 
   // Additional metadata
   metadata         String?  // JSON string for additional provider-specific data

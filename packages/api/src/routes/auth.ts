@@ -48,7 +48,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       });
 
       if (existingAccount) {
-        // Update existing account with new tokens
+        // Update existing account with new tokens and clear any auth errors
         await prisma.emailAccount.update({
           where: { id: existingAccount.id },
           data: {
@@ -56,6 +56,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             ...(tokens.refreshToken && { refreshToken: tokens.refreshToken }),
             tokenExpiry: tokens.tokenExpiry,
             isActive: true,
+            authError: null,
           },
         });
       } else {
@@ -121,23 +122,41 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       // Get user info
       const userInfo = await outlookOAuth.getUserInfo(tokens.accessToken);
 
-      // Check if account already exists
-      const existingAccount = await prisma.emailAccount.findFirst({
+      // Check if account already exists (try exact match first, then check for accounts needing re-auth)
+      let existingAccount = await prisma.emailAccount.findFirst({
         where: {
           emailAddress: userInfo.email,
           provider: EmailProvider.OUTLOOK,
         },
       });
 
+      // If no exact match, check for any Outlook account with auth error that might be the same user
+      // (Microsoft can return different email formats for the same account)
+      if (!existingAccount) {
+        const accountsNeedingReauth = await prisma.emailAccount.findMany({
+          where: {
+            provider: EmailProvider.OUTLOOK,
+            authError: { not: null },
+          },
+        });
+        if (accountsNeedingReauth.length === 1) {
+          // If there's only one Outlook account needing re-auth, assume it's this user
+          existingAccount = accountsNeedingReauth[0];
+        }
+      }
+
       if (existingAccount) {
-        // Update existing account with new tokens
+        // Update existing account with new tokens and clear any auth errors
         await prisma.emailAccount.update({
           where: { id: existingAccount.id },
           data: {
+            emailAddress: userInfo.email,
+            displayName: userInfo.displayName || existingAccount.displayName,
             accessToken: tokens.accessToken,
             ...(tokens.refreshToken && { refreshToken: tokens.refreshToken }),
             tokenExpiry: tokens.tokenExpiry,
             isActive: true,
+            authError: null,
           },
         });
       } else {

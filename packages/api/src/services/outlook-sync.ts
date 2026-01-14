@@ -80,6 +80,11 @@ export class OutlookSyncService {
       return;
     }
 
+    if (account.authError) {
+      console.log(`Account ${accountId} has auth error, skipping sync. User needs to re-authenticate.`);
+      return;
+    }
+
     if (!account.refreshToken) {
       console.error(`No refresh token for Outlook account ${accountId}`);
       return;
@@ -102,8 +107,19 @@ export class OutlookSyncService {
         // If 401, try refreshing token and retry once
         if (error.status === 401) {
           console.log(`Got 401, refreshing token and retrying for account ${accountId}`);
-          accessToken = await this.refreshToken(accountId, account.refreshToken);
-          messages = await this.fetchMessages(accessToken, lastSyncAt);
+          try {
+            accessToken = await this.refreshToken(accountId, account.refreshToken);
+            messages = await this.fetchMessages(accessToken, lastSyncAt);
+          } catch (retryError: any) {
+            // Token refresh failed or retry still got 401 - mark account as needing re-auth
+            const errorMessage = retryError.message || 'Authentication failed';
+            console.error(`Auth failed for account ${accountId}, marking for re-authentication: ${errorMessage}`);
+            await prisma.emailAccount.update({
+              where: { id: accountId },
+              data: { authError: errorMessage },
+            });
+            return;
+          }
         } else {
           throw error;
         }
