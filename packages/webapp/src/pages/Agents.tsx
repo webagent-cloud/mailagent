@@ -27,9 +27,7 @@ interface Agent {
 }
 
 interface AgentFormData {
-  name: string;
-  trigger: string;
-  triggerType: 'ON_EACH_EMAIL' | 'TRIGGER_MANUALLY';
+  trigger: 'ON_EACH_EMAIL' | 'WEBHOOK';
   prompt: string;
   responseFormat: 'STRING' | 'JSON' | 'JSON_SCHEMA';
   jsonSchema: string;
@@ -48,9 +46,7 @@ export function Agents() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [formData, setFormData] = useState<AgentFormData>({
-    name: '',
-    trigger: '',
-    triggerType: 'TRIGGER_MANUALLY',
+    trigger: 'ON_EACH_EMAIL',
     prompt: '',
     responseFormat: 'STRING',
     jsonSchema: '',
@@ -82,9 +78,7 @@ export function Agents() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      trigger: '',
-      triggerType: 'TRIGGER_MANUALLY',
+      trigger: 'ON_EACH_EMAIL',
       prompt: '',
       responseFormat: 'STRING',
       jsonSchema: '',
@@ -105,9 +99,7 @@ export function Agents() {
 
   const handleEditAgent = (agent: Agent) => {
     setFormData({
-      name: agent.name,
-      trigger: agent.trigger,
-      triggerType: agent.triggerType,
+      trigger: agent.triggerType as 'ON_EACH_EMAIL' | 'WEBHOOK',
       prompt: agent.prompt,
       responseFormat: agent.responseFormat,
       jsonSchema: agent.jsonSchema || '',
@@ -257,38 +249,14 @@ export function Agents() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Agent Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., Email Classifier"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="trigger">Trigger *</Label>
-                  <Input
+                  <Select
                     id="trigger"
                     value={formData.trigger}
-                    onChange={(e) => setFormData({ ...formData, trigger: e.target.value })}
-                    placeholder="e.g., invoice, urgent"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="triggerType">Trigger Type *</Label>
-                  <Select
-                    id="triggerType"
-                    value={formData.triggerType}
-                    onChange={(e) => setFormData({ ...formData, triggerType: e.target.value as 'ON_EACH_EMAIL' | 'TRIGGER_MANUALLY' })}
+                    onChange={(e) => setFormData({ ...formData, trigger: e.target.value as 'ON_EACH_EMAIL' | 'WEBHOOK' })}
                   >
-                    <option value="TRIGGER_MANUALLY">Trigger Manually</option>
-                    <option value="ON_EACH_EMAIL">On Each Email</option>
+                    <option value="ON_EACH_EMAIL">On each mail</option>
+                    <option value="WEBHOOK">Webhook</option>
                   </Select>
                 </div>
 
@@ -306,18 +274,6 @@ export function Agents() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="prompt">Prompt *</Label>
-                <Textarea
-                  id="prompt"
-                  value={formData.prompt}
-                  onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                  placeholder="Enter the prompt for your agent..."
-                  rows={4}
-                  required
-                />
-              </div>
-
               {formData.responseFormat === 'JSON_SCHEMA' && (
                 <div className="space-y-2">
                   <Label htmlFor="jsonSchema">JSON Schema</Label>
@@ -332,6 +288,18 @@ export function Agents() {
               )}
 
               <div className="space-y-2">
+                <Label htmlFor="prompt">Prompt *</Label>
+                <Textarea
+                  id="prompt"
+                  value={formData.prompt}
+                  onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                  placeholder="Enter the prompt for your agent..."
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="webhookUrl">Webhook URL</Label>
                 <Input
                   id="webhookUrl"
@@ -342,26 +310,23 @@ export function Agents() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="model">Model</Label>
-                  <Input
-                    id="model"
-                    value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    placeholder="gpt-4"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="modelProvider">Model Provider</Label>
-                  <Input
-                    id="modelProvider"
-                    value={formData.modelProvider}
-                    onChange={(e) => setFormData({ ...formData, modelProvider: e.target.value })}
-                    placeholder="openai"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="model">Model *</Label>
+                <Select
+                  id="model"
+                  value={`${formData.modelProvider}/${formData.model}`}
+                  onChange={(e) => {
+                    const [provider, model] = e.target.value.split('/');
+                    setFormData({ ...formData, modelProvider: provider, model });
+                  }}
+                >
+                  <option value="openai/gpt-4">OpenAI - GPT-4</option>
+                  <option value="openai/gpt-4-turbo">OpenAI - GPT-4 Turbo</option>
+                  <option value="openai/gpt-3.5-turbo">OpenAI - GPT-3.5 Turbo</option>
+                  <option value="anthropic/claude-3-opus">Anthropic - Claude 3 Opus</option>
+                  <option value="anthropic/claude-3-sonnet">Anthropic - Claude 3 Sonnet</option>
+                  <option value="anthropic/claude-3-haiku">Anthropic - Claude 3 Haiku</option>
+                </Select>
               </div>
 
               <div className="space-y-4">
